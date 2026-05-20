@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SchooLife – Total Cost of Ownership</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f0f2f5; display: flex; justify-content: center; padding: 32px 16px; }
+    #root { width: 100%; max-width: 960px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+    const RATE = 125;
+    const PD_TO_H = 8;
+    const HOSTING_PER_SCHOOL = 200;
+    const MAINTENANCE = 2000;
+    const SETUP_PER_SCHOOL = 5000;
+    const EIGENLEISTUNG_PER_YEAR = 10;
+
+    const releases = [
+      {
+        name: "MVP", label: "Recruiting & Bewerbung", color: "#2e7d32", bg: "#e8f5e9",
+        packages: [
+          { name: "Personas & Requirements Gathering",       concept: 2,   design: 0,   dev: 0,    qa: 0   },
+          { name: "Application Form & Registration",         concept: 2,   design: 2,   dev: 9.5,  qa: 2.5 },
+          { name: "Application Steps Page",                  concept: 1,   design: 1.5, dev: 1,    qa: 0.5 },
+          { name: "CMS Base Structure & Legal Pages",        concept: 1,   design: 1.5, dev: 5,    qa: 1   },
+          { name: "Login & Authentication",                  concept: 1,   design: 2,   dev: 10,   qa: 2   },
+          { name: "User Profiles (all roles)",               concept: 2,   design: 2,   dev: 12,   qa: 2   },
+          { name: "Applicant Dashboard & Application",       concept: 2.5, design: 5,   dev: 12,   qa: 4   },
+          { name: "Admin: Application Overview & Detail",    concept: 2,   design: 6,   dev: 12,   qa: 3   },
+        ]
+      },
+      {
+        name: "V1", label: "Matching, Rollen & Interviews", color: "#1565c0", bg: "#e3f2fd",
+        packages: [
+          { name: "User Role Management",                    concept: 5,   design: 2,   dev: 10,   qa: 2   },
+          { name: "Admin: Matching & Job Board",             concept: 4,   design: 5,   dev: 15,   qa: 4   },
+          { name: "Company: Job Management",                 concept: 3,   design: 4,   dev: 10,   qa: 3   },
+          { name: "Interview Scheduling",                    concept: 2,   design: 2,   dev: 8,    qa: 2   },
+        ]
+      },
+      {
+        name: "V2", label: "Lernbegleitung & Analytics", color: "#e65100", bg: "#fff3e0",
+        packages: [
+          { name: "Progress Tracking & Course Overview",     concept: 5,   design: 5,   dev: 15,   qa: 4   },
+          { name: "Messaging System",                        concept: 4,   design: 5,   dev: 18,   qa: 5   },
+          { name: "Notifications (Email, In-App, Browser)",  concept: 3,   design: 2,   dev: 10,   qa: 3   },
+          { name: "Analytics",                               concept: 5,   design: 6,   dev: 12,   qa: 5   },
+        ]
+      },
+      {
+        name: "V3", label: "Community & Alumni-Netzwerk", color: "#6a1b9a", bg: "#f3e5f5",
+        packages: [
+          { name: "News & Events + RSVP",                    concept: 4,   design: 5,   dev: 12,   qa: 3   },
+          { name: "Alumni Job Board",                        concept: 3,   design: 4,   dev: 10,   qa: 3   },
+          { name: "Networking Features",                     concept: 4,   design: 5,   dev: 12,   qa: 4   },
+        ]
+      },
+    ];
+
+    const pkgTotal = p => p.concept + p.design + p.dev + p.qa;
+    const relTotal = r => r.packages.reduce((s, p) => s + pkgTotal(p), 0);
+    const eur = v => v.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+    const ptCost = pd => pd * PD_TO_H * RATE;
+
+    function App() {
+      const [schools, setSchools] = useState(10);
+      const [years, setYears] = useState(3);
+      const [foerderung, setFoerderung] = useState(0);
+      const [showDetail, setShowDetail] = useState(false);
+
+      const totalPD = releases.reduce((s, r) => s + relTotal(r), 0);
+      const totalDevGross = ptCost(totalPD);
+      const eigenleistungPT = EIGENLEISTUNG_PER_YEAR * years;
+      const eigenleistungCost = ptCost(eigenleistungPT);
+      const totalDev = Math.max(0, totalDevGross - eigenleistungCost - foerderung);
+
+      const opexMonthly = HOSTING_PER_SCHOOL * schools + MAINTENANCE;
+      const opexYearly = opexMonthly * 12;
+      const opexTotal = opexYearly * years;
+      const setupTotal = schools * SETUP_PER_SCHOOL;
+      const totalTCO = totalDev + setupTotal + opexTotal;
+      const perSchoolPerMonth = (totalDev / years + opexYearly + setupTotal / years) / schools / 12;
+
+      const s = {
+        wrap: { fontFamily: "Arial, sans-serif", fontSize: 13, color: "#1a1a1a", padding: "24px 28px", background: "white", borderRadius: 8, boxShadow: "0 2px 12px rgba(0,0,0,0.08)" },
+        headerBorder: { borderBottom: "2px solid #1a1a6e", paddingBottom: 10, marginBottom: 18 },
+        h1: { fontSize: 16, fontWeight: 700, color: "#1a1a6e" },
+        sub: { fontSize: 11, color: "#555", marginTop: 2 },
+        badge: (bg, color) => ({ background: bg, color, borderRadius: 3, padding: "3px 10px", fontWeight: 700, fontSize: 11 }),
+        badgeRow: { marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" },
+        paramBox: { background: "#f4f6fb", borderRadius: 6, padding: "12px 16px", marginBottom: 18 },
+        paramLabel: { fontWeight: 700, color: "#1a1a6e", marginBottom: 10, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 },
+        grid3: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 },
+        sectionLabel: { fontWeight: 700, color: "#1a1a6e", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
+        grid4: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 8 },
+        releaseCard: (bg, color) => ({ background: bg, borderLeft: `3px solid ${color}`, borderRadius: "0 4px 4px 0", padding: "8px 10px" }),
+        card: (bg, borderColor) => ({ background: bg, borderLeft: `3px solid ${borderColor}`, borderRadius: "0 4px 4px 0", padding: "8px 10px" }),
+        tcoBox: { background: "#1a1a6e", color: "white", borderRadius: 6, padding: "14px 18px", marginBottom: 18 },
+        foerderBox: { gridColumn: "span 3", borderTop: "2px solid #2e7d32", marginTop: 4, background: "#f1f8f1", borderRadius: "0 0 6px 6px", padding: "12px 14px", marginLeft: -14, marginRight: -14, marginBottom: -12 },
+        eigenBox: { background: "#e8eaf6", borderRadius: 4, padding: "8px 10px", fontSize: 11 },
+      };
+
+      return (
+        <div style={s.wrap}>
+          {/* Header */}
+          <div style={s.headerBorder}>
+            <div style={s.h1}>SchooLife – Total Cost of Ownership</div>
+            <div style={s.sub}>Basis: Aufwandsschätzung FEDA 2026-02-13 · {totalPD} PT · 125 €/h · 8h/PT · Hosting 200 €/Schule/Monat · Wartung 2.000 €/Monat · Setup 5.000 €/Schule</div>
+            <div style={s.badgeRow}>
+              <span style={s.badge("#1a1a6e","white")}>{totalPD} PT Gesamtaufwand · {eur(totalDevGross)}</span>
+              <span style={s.badge("#e8eaf6","#1a1a6e")}>− {eigenleistungPT} PT Eigenleistung · {eur(eigenleistungCost)}</span>
+              {foerderung > 0 && <span style={s.badge("#e8f5e9","#2e7d32")}>− Förderung {eur(foerderung)}</span>}
+              <span style={s.badge("#1a1a6e","#f5c800")}>= Netto {eur(totalDev)}</span>
+            </div>
+          </div>
+
+          {/* Parameter */}
+          <div style={s.paramBox}>
+            <div style={s.paramLabel}>Parameter</div>
+            <div style={s.grid3}>
+              {[
+                { label: "Anzahl Schulen", val: schools, set: setSchools, min: 2, max: 50, step: 1, unit: "Schulen" },
+                { label: "Vertragslaufzeit", val: years, set: setYears, min: 1, max: 5, step: 1, unit: "Jahre" },
+              ].map(p => (
+                <div key={p.label}>
+                  <div style={{ fontSize: 11, color: "#555", marginBottom: 3 }}>{p.label}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <input type="range" min={p.min} max={p.max} step={p.step} value={p.val}
+                      onChange={e => p.set(+e.target.value)}
+                      style={{ flex: 1, accentColor: "#1a1a6e" }} />
+                    <span style={{ fontWeight: 700, color: "#1a1a6e", minWidth: 60, textAlign: "right" }}>
+                      {p.val.toLocaleString("de-DE")} {p.unit}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              <div style={s.eigenBox}>
+                <div style={{ fontWeight: 700, color: "#1a1a6e", marginBottom: 2 }}>Eigenleistung netzstrategen</div>
+                <div style={{ color: "#444" }}>{EIGENLEISTUNG_PER_YEAR} PT/Jahr × {years} Jahre = <strong>{eigenleistungPT} PT</strong> · {eur(eigenleistungCost)}</div>
+              </div>
+
+              <div style={{ fontSize: 11, color: "#999", display: "flex", alignItems: "center", gridColumn: "span 2" }}>
+                Fixannahmen: Hosting 200 €/Schule/Monat · Wartung 2.000 €/Monat · Setup 5.000 €/Schule einmalig
+              </div>
+
+              {/* Förderung */}
+              <div style={s.foerderBox}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <span style={{ fontWeight: 700, color: "#2e7d32", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Einmalige Förderung (z.B. ZfA / Auswärtiges Amt)
+                  </span>
+                  <span style={{ fontSize: 11, color: foerderung > 0 ? "#2e7d32" : "#999", fontWeight: foerderung > 0 ? 700 : 400 }}>
+                    {foerderung > 0
+                      ? `deckt ${Math.min(100, Math.round(foerderung / totalDevGross * 100))}% der Bruttoentwicklungskosten`
+                      : "noch keine Förderung eingestellt"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input type="range" min={0} max={200000} step={5000} value={foerderung}
+                    onChange={e => setFoerderung(+e.target.value)}
+                    style={{ flex: 1, accentColor: "#2e7d32" }} />
+                  <span style={{ fontWeight: 700, color: "#2e7d32", fontSize: 16, minWidth: 90, textAlign: "right" }}>{eur(foerderung)}</span>
+                </div>
+                {foerderung > 0 && (
+                  <div style={{ marginTop: 8, display: "flex", gap: 8, fontSize: 11, flexWrap: "wrap" }}>
+                    {[
+                      ["#c8e6c9","#1b5e20",`Brutto: ${eur(totalDevGross)}`],
+                      ["#c8e6c9","#1b5e20",`− Eigenleistung: ${eur(eigenleistungCost)}`],
+                      ["#c8e6c9","#1b5e20",`− Förderung: ${eur(foerderung)}`],
+                      ["#2e7d32","white",`Netto Entwicklung: ${eur(totalDev)}`],
+                    ].map(([bg,col,txt]) => (
+                      <span key={txt} style={{ background: bg, borderRadius: 3, padding: "3px 10px", color: col, fontWeight: bg === "#2e7d32" ? 700 : 400 }}>{txt}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 1. Entwicklung */}
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={s.sectionLabel}>1. Entwicklungskosten (Capex) · {totalPD} PT · {eur(totalDevGross)} brutto</div>
+              <button onClick={() => setShowDetail(!showDetail)}
+                style={{ fontSize: 11, color: "#1a1a6e", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                {showDetail ? "Details verbergen" : "Details anzeigen"}
+              </button>
+            </div>
+            <div style={s.grid4}>
+              {releases.map(r => {
+                const pd = relTotal(r);
+                return (
+                  <div key={r.name} style={s.releaseCard(r.bg, r.color)}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: r.color, textTransform: "uppercase" }}>{r.name}</div>
+                    <div style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>{r.label}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15 }}>{eur(ptCost(pd))}</div>
+                    <div style={{ fontSize: 10, color: "#888" }}>{pd} PT · {pd * PD_TO_H}h</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {showDetail && releases.map(r => (
+              <div key={r.name} style={{ marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, color: r.color, fontSize: 11, marginBottom: 3 }}>{r.name}: {r.label}</div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  <thead>
+                    <tr style={{ background: "#f4f6fb" }}>
+                      {["Work Package","Concept","Design","Dev","QA","PT","Kosten"].map((h,i) => (
+                        <th key={h} style={{ textAlign: i === 0 ? "left" : "right", padding: "3px 6px", fontWeight: i >= 5 ? 700 : 400 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {r.packages.map(p => {
+                      const tot = pkgTotal(p);
+                      return (
+                        <tr key={p.name} style={{ borderBottom: "1px solid #eee" }}>
+                          <td style={{ padding: "3px 6px" }}>{p.name}</td>
+                          {[p.concept, p.design, p.dev, p.qa].map((v,i) => (
+                            <td key={i} style={{ textAlign: "right", padding: "3px 6px", color: "#888" }}>{v}</td>
+                          ))}
+                          <td style={{ textAlign: "right", padding: "3px 6px", fontWeight: 700 }}>{tot}</td>
+                          <td style={{ textAlign: "right", padding: "3px 6px", fontWeight: 700 }}>{eur(ptCost(tot))}</td>
+                        </tr>
+                      );
+                    })}
+                    <tr style={{ background: "#f4f6fb", fontWeight: 700 }}>
+                      <td style={{ padding: "3px 6px" }}>Total {r.name}</td>
+                      {["concept","design","dev","qa"].map(k => (
+                        <td key={k} style={{ textAlign: "right", padding: "3px 6px" }}>{r.packages.reduce((s,p)=>s+p[k],0)}</td>
+                      ))}
+                      <td style={{ textAlign: "right", padding: "3px 6px" }}>{relTotal(r)}</td>
+                      <td style={{ textAlign: "right", padding: "3px 6px" }}>{eur(ptCost(relTotal(r)))}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ))}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+              <div style={{ background: "#e8eaf6", color: "#1a1a6e", border: "1px solid #c5cae9", borderRadius: 4, padding: "6px 14px", fontWeight: 700, fontSize: 12 }}>
+                {eur(totalDevGross)} − {eigenleistungPT} PT Eigenleistung ({eur(eigenleistungCost)}){foerderung > 0 ? ` − Förderung (${eur(foerderung)})` : ""}
+              </div>
+              <div style={{ background: "#1a1a6e", color: "white", borderRadius: 4, padding: "6px 14px", fontWeight: 700, fontSize: 14 }}>
+                Netto Entwicklung: {eur(totalDev)}
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Opex */}
+          <div style={{ marginBottom: 18 }}>
+            <div style={s.sectionLabel}>2. Betriebskosten (Opex) · {schools} Schulen über {years} Jahre</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+              {[
+                { label: `Hosting/Monat (${schools} Schulen)`, val: HOSTING_PER_SCHOOL * schools, sub: `${eur(HOSTING_PER_SCHOOL)}/Schule · fix` },
+                { label: "Wartung & Support/Monat", val: MAINTENANCE, sub: "fix · Multi-Tenant" },
+                { label: `Opex gesamt (${years} Jahre)`, val: opexTotal, sub: `${eur(opexYearly)}/Jahr · ${eur(opexMonthly)}/Monat` },
+              ].map(item => (
+                <div key={item.label} style={s.card("#f4f6fb","#546e7a")}>
+                  <div style={{ fontSize: 11, color: "#555" }}>{item.label}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{eur(item.val)}</div>
+                  <div style={{ fontSize: 10, color: "#888" }}>{item.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. Setup */}
+          <div style={{ marginBottom: 18 }}>
+            <div style={s.sectionLabel}>3. Setup-Kosten · {schools} Schulen</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+              {[
+                { label: "Setup je Schule", val: SETUP_PER_SCHOOL, sub: "fix · Onboarding, Config, Schulung" },
+                { label: `Setup gesamt (${schools} Schulen)`, val: setupTotal, sub: `${schools} × ${eur(SETUP_PER_SCHOOL)}` },
+                { label: "Davon Pilot (Barcelona + Madrid)", val: SETUP_PER_SCHOOL * 2, sub: "inkl. im Projektbudget" },
+              ].map(item => (
+                <div key={item.label} style={s.card("#fff9e0","#f5c800")}>
+                  <div style={{ fontSize: 11, color: "#555" }}>{item.label}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{eur(item.val)}</div>
+                  <div style={{ fontSize: 10, color: "#888" }}>{item.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* TCO Total */}
+          <div style={s.tcoBox}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              {[
+                { label: `GESAMT TCO (${years} Jahre, ${schools} Schulen)`, val: eur(totalTCO) },
+                { label: "PRO SCHULE / JAHR", val: eur(perSchoolPerMonth * 12) },
+                { label: "PRO SCHULE / MONAT", val: eur(perSchoolPerMonth), highlight: true },
+              ].map(item => (
+                <div key={item.label}>
+                  <div style={{ fontSize: 10, opacity: 0.75, marginBottom: 3 }}>{item.label}</div>
+                  <div style={{ fontWeight: 700, fontSize: 20, color: item.highlight ? "#f5c800" : "white" }}>{item.val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Kostenverteilung */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={s.sectionLabel}>Kostenverteilung</div>
+            {[
+              { label: "Entwicklung (netto)", val: totalDev, color: "#1a1a6e" },
+              { label: `Betrieb (${years} Jahre, ${schools} Schulen)`, val: opexTotal, color: "#546e7a" },
+              { label: `Setup (${schools} Schulen)`, val: setupTotal, color: "#f5c800" },
+              { label: `Eigenleistung netzstrategen (${eigenleistungPT} PT)`, val: eigenleistungCost, color: "#78909c" },
+              ...(foerderung > 0 ? [{ label: "Förderung", val: foerderung, color: "#2e7d32" }] : []),
+            ].map(item => {
+              const base = totalTCO + eigenleistungCost + foerderung;
+              const pct = Math.min(100, Math.round(item.val / base * 100));
+              return (
+                <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
+                  <div style={{ width: 220, fontSize: 11, color: "#555" }}>{item.label}</div>
+                  <div style={{ flex: 1, background: "#eee", borderRadius: 3, height: 16, overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, background: item.color, height: "100%", borderRadius: 3 }} />
+                  </div>
+                  <div style={{ width: 90, textAlign: "right", fontWeight: 700, fontSize: 12 }}>{eur(item.val)}</div>
+                  <div style={{ width: 35, textAlign: "right", fontSize: 11, color: "#888" }}>{pct}%</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ fontSize: 10, color: "#999", borderTop: "1px solid #eee", paddingTop: 8 }}>
+            Basis: Aufwandsschätzung FEDA 2026-02-13 · {totalPD} PT · 125 €/h · 8h/PT · Eigenleistung netzstrategen: {EIGENLEISTUNG_PER_YEAR} PT/Jahr · steigt mit Vertragslaufzeit
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
