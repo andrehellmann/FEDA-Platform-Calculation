@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SchooLife – Total Cost of Ownership</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231a1a6e'/><text x='50%25' y='22' font-size='18' font-family='Arial' font-weight='bold' fill='%23f5c800' text-anchor='middle'>S</text></svg>" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -336,8 +337,32 @@
             })}
           </div>
 
-          <div style={{ fontSize: 10, color: "#999", borderTop: "1px solid #eee", paddingTop: 8 }}>
+          <div style={{ fontSize: 10, color: "#999", borderTop: "1px solid #eee", paddingTop: 8, marginBottom: 16 }}>
             Basis: Aufwandsschätzung FEDA 2026-02-13 · {totalPD} PT · 125 €/h · 8h/PT · Eigenleistung netzstrategen: {EIGENLEISTUNG_PER_YEAR} PT/Jahr · steigt mit Vertragslaufzeit
+          </div>
+
+          {/* Impressum */}
+          <div style={{ fontSize: 10, color: "#bbb", textAlign: "center", marginBottom: 16 }}>
+            netzstrategen GmbH · Alter Schlachthof 47 · 76131 Karlsruhe · Germany
+          </div>
+
+          {/* Disclaimer */}
+          <div style={{ background: "#fffbf0", border: "1px solid #f0e0a0", borderRadius: 6, padding: "14px 16px" }}>
+            <div style={{ fontWeight: 700, color: "#7a5c00", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+              ⚠ Hinweis zur Aufwandsschätzung
+            </div>
+            <p style={{ fontSize: 11, color: "#555", marginBottom: 8, lineHeight: 1.6 }}>
+              Die vorliegenden Aufwandsschätzungen basieren auf dem aktuellen Kenntnisstand und sind als orientierende Planungsgrundlage zu verstehen. Folgende Punkte sind noch nicht abschließend bekannt und können den tatsächlichen Aufwand beeinflussen – die Liste ist nicht abschließend:
+            </p>
+            <ul style={{ fontSize: 11, color: "#555", lineHeight: 1.8, paddingLeft: 16 }}>
+              <li>Detaillierte Anforderungen an die gemeinsame Plattform</li>
+              <li>Detaillierte Anforderungen der einzelnen Schulen an ihre Instanz</li>
+              <li>Drittsysteme, die zentral oder dezentral angebunden werden müssen</li>
+              <li>Lokale und regionale Umstände beim Hosting und der technischen Bereitstellung</li>
+              <li>Länderspezifische Datenschutz- und Compliance-Anforderungen, die über die DSGVO-Grundimplementierung hinausgehen können</li>
+              <li>Umfang der Übernahme und Migration von Bestandsdaten bestehender Systeme</li>
+              <li>Änderungen an Scope, Priorisierung oder Anforderungen nach Projektstart</li>
+            </ul>
           </div>
         </div>
       );
